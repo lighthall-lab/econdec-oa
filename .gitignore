@@ -4,3 +4,6 @@ __pycache__
 
 # Notebook Checkpoints
 .ipynb_checkpoints/*
+
+# R console log
+.Rhistory
