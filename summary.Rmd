@@ -40,24 +40,24 @@ data$StockValue <- factor(data$StockValue)
 grp_level <- data %>%
 	group_by(AgeGroup,StockValue) %>%
 	summarize(
-	  MeanError = mean(val_estdiff_valid, na.rm = TRUE),
-	  StdErr = sd(val_estdiff_valid, na.rm = TRUE) / sqrt(length(val_estdiff_valid))
+	  mean = mean(val_estdiff_valid, na.rm = TRUE),
+	  ci = 2*(sd(val_estdiff_valid, na.rm = TRUE) / sqrt(length(val_estdiff_valid)))
 	  )
-spread(select(grp_level,StockValue,MeanError),StockValue,MeanError)
+spread(select(grp_level,StockValue,mean),StockValue,mean)
 ```
 
 
 
 ```{r}
 # Bar Plot Domain-Magnitude Interaction Between Groups
-ggplot(grp_level, aes(x = AgeGroup, y = MeanError)) + 
-	geom_bar(
-		aes(color = StockValue, fill = StockValue),
-		stat = 'identity', position = position_dodge()
-		) +
+ggplot(grp_level, aes(x = AgeGroup, y = mean, fill=StockValue)) + 
+	geom_bar(aes(fill = StockValue), stat='identity',
+	         position=position_dodge()) +
+  geom_errorbar(aes(x = AgeGroup, ymin=mean-ci, ymax=mean+ci),
+                position=position_dodge2()) +
 	ggpubr::color_palette(bar_color_palette) + 
 	ggpubr::fill_palette(bar_fill_palette) + 
-	ggpubr::theme_pubclean()
+	theme_minimal()
 ```
 
 
@@ -73,10 +73,9 @@ ya_error_level <- filter(data, AgeGroup == 1)  %>%
     )
 ggplot(ya_error_level, aes(x=ObjectiveProb, y=SubjectiveProb, color=Domain)) +
   geom_smooth() +
-  #geom_ribbon(aes(ymin=ErrLower, ymax=ErrUpper), fill='lightgrey',linetype=0) +
-  #geom_line() +
-  coord_cartesian(xlim=c(0,1),ylim=c(0,1)) +
-  geom_abline(aes(slope=1,intercept=0),linetype=2) +
+  geom_pointrange(size=0.2, aes(ymin=ErrLower, ymax=ErrUpper)) +
+  coord_cartesian(xlim=c(0,1), ylim=c(0,1)) +
+  geom_abline(aes(slope=1, intercept=0), linetype=2) +
   xlab('Objective Probability') + ylab('Estimation') +
   ggtitle('Young Adults\' Error Asymmetry') +
   ggpubr::color_palette(line_color_palette) +
@@ -95,13 +94,11 @@ oa_error_level <- filter(data, AgeGroup == 2)  %>%
     ErrLower = SubjectiveProb - 2 *(sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)))
     )
 ggplot(oa_error_level, aes(x=ObjectiveProb, y=SubjectiveProb, color=Domain)) +
-  geom_smooth() + coord_cartesian(xlim=c(0,1),ylim=c(0,1)) +
-  #geom_ribbon(aes(ymin=ErrLower, ymax=ErrUpper), fill='lightgrey', linetype=0) +
-  #geom_line() + 
-  geom_abline(aes(slope=1,intercept=0),linetype=2) +
+  geom_smooth() + coord_cartesian(xlim=c(0,1), ylim=c(0,1)) +
+  geom_pointrange(size=0.2, aes(ymin=ErrLower, ymax=ErrUpper)) +
+  geom_abline(aes(slope=1, intercept=0), linetype=2) +
   ggtitle('Older Adults\' Error Asymmetry') +
   xlab('Objective Probability') + ylab('Estimation') +
   ggpubr::color_palette(line_color_palette) +
   theme_minimal(base_size = 12)
 ```
-
