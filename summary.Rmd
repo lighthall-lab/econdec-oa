@@ -1,0 +1,111 @@
+---
+title: "Summary Visualizations for EconDec-OA"
+output: html_notebook
+---
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+Requires `tidyverse` and `ggpubr` packages to be installed:
+```
+install.packages('tidyverse')
+install.packages('ggpubr')
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+
+```{r}
+#~#~#~# SET PARAMETERS #~#~#~#
+# Read Data
+data <- read.csv('../derivatives/main_trial_level.csv')
+
+# Color Palettes for Bar Plot
+bar_color_palette <- 'startrek'
+bar_fill_palette <- 'futurama'
+
+# Color Palette for Asymmetry Curves
+line_color_palette <- c('dodgerblue3','firebrick3')
+#~#~#~# END PARAMETERS #~#~#~#
+```
+
+
+
+```{r}
+# Factorize
+data$AgeGroup <- factor(data$AgeGroup)
+data$SubjNum <- factor(data$SubjNum)
+data$StockValue <- factor(data$StockValue)
+```
+
+
+
+```{r}
+# Group & Summarize
+grp_level <- data %>%
+	group_by(AgeGroup,StockValue) %>%
+	summarize(
+	  MeanError = mean(val_estdiff_valid, na.rm = TRUE),
+	  StdErr = sd(val_estdiff_valid, na.rm = TRUE) / sqrt(length(val_estdiff_valid))
+	  )
+grp_level
+```
+
+
+
+```{r}
+# Bar Plot Domain-Magnitude Interaction Between Groups
+ggplot(grp_level, aes(x = AgeGroup, y = MeanError)) + 
+	geom_bar(
+		aes(color = StockValue, fill = StockValue),
+		stat = 'identity', position = position_dodge()
+		) +
+	ggpubr::color_palette(bar_color_palette) + 
+	ggpubr::fill_palette(bar_fill_palette) + 
+	ggpubr::theme_pubclean()
+```
+
+
+
+```{r}
+# Line Plot Young Adults' Domain Asymmetry Curves
+ya_error_level <- filter(data, AgeGroup == 1)  %>%
+  group_by(Domain, ObjectiveProb = TrueProbGood) %>%
+  summarize(
+    SubjectiveProb = mean(ProbGood, na.rm = TRUE),
+    ErrUpper = SubjectiveProb + sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)),
+    ErrLower = SubjectiveProb - sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood))
+    )
+ggplot(ya_error_level, aes(x=ObjectiveProb, y=SubjectiveProb, color=Domain)) +
+  geom_line(size=1) + xlim(0,1) + ylim(0,1) +
+  geom_abline(aes(slope=1,intercept=0),linetype=2) +
+  geom_linerange(aes(ymin=ErrLower, ymax=ErrUpper),size=1) +
+  xlab('Objective Probability') + ylab('Estimation') +
+  ggtitle('Young Adults\' Error Asymmetry') +
+  ggpubr::color_palette(line_color_palette) +
+  ggpubr::labs_pubr(base_size = 12)
+```
+
+
+
+```{r}
+# Line Plot Older Adults' Domain Asymmetry Curves
+oa_error_level <- filter(data, AgeGroup == 2)  %>%
+  group_by(Domain, ObjectiveProb = TrueProbGood) %>%
+  summarize(
+    SubjectiveProb = mean(ProbGood, na.rm = TRUE),
+    ErrUpper = SubjectiveProb + sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)),
+    ErrLower = SubjectiveProb - sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood))
+    )
+ggplot(oa_error_level, aes(x=ObjectiveProb, y=SubjectiveProb, color=Domain)) +
+  geom_line(size=1) + xlim(0,1) + ylim(0,1) +
+  geom_abline(aes(slope=1,intercept=0),linetype=2) +
+  geom_linerange(aes(ymin=ErrLower, ymax=ErrUpper),size=1) +
+  ggtitle('Older Adults\' Error Asymmetry') +
+  xlab('Objective Probability') + ylab('Estimation') +
+  ggpubr::color_palette(line_color_palette) +
+  ggpubr::labs_pubr(base_size = 12)
+```
+

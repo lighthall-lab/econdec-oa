@@ -2,7 +2,7 @@
 config.py
 __pycache__
 
-# Notebook Checkpoints
+# Python Notebook Checkpoints
 .ipynb_checkpoints/*
 
 # R console log
