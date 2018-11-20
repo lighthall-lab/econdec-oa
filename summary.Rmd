@@ -11,46 +11,39 @@ install.packages('tidyverse')
 install.packages('ggpubr')
 ```
 
+
+#### Set Parameters
 ```{r}
 library(tidyverse)
-```
-
-
-
-```{r}
-#~#~#~# SET PARAMETERS #~#~#~#
-# Read Data
-data <- read.csv('../derivatives/main_trial_level.csv')
 
 # Color Palettes for Bar Plot
 bar_color_palette <- 'startrek'
 bar_fill_palette <- 'futurama'
 
 # Color Palette for Asymmetry Curves
-line_color_palette <- c('dodgerblue3','firebrick3')
-#~#~#~# END PARAMETERS #~#~#~#
+line_color_palette <- c('cornflowerblue','indianred2')
 ```
 
 
-
+#### Read & Factorize Trial-Level Data
 ```{r}
-# Factorize
+data <- read.csv('../derivatives/main_trial_level.csv')
+
 data$AgeGroup <- factor(data$AgeGroup)
 data$SubjNum <- factor(data$SubjNum)
 data$StockValue <- factor(data$StockValue)
 ```
 
 
-
+#### Group & Summarize
 ```{r}
-# Group & Summarize
 grp_level <- data %>%
 	group_by(AgeGroup,StockValue) %>%
 	summarize(
 	  MeanError = mean(val_estdiff_valid, na.rm = TRUE),
 	  StdErr = sd(val_estdiff_valid, na.rm = TRUE) / sqrt(length(val_estdiff_valid))
 	  )
-grp_level
+spread(select(grp_level,StockValue,MeanError),StockValue,MeanError)
 ```
 
 
@@ -75,17 +68,19 @@ ya_error_level <- filter(data, AgeGroup == 1)  %>%
   group_by(Domain, ObjectiveProb = TrueProbGood) %>%
   summarize(
     SubjectiveProb = mean(ProbGood, na.rm = TRUE),
-    ErrUpper = SubjectiveProb + sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)),
-    ErrLower = SubjectiveProb - sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood))
+    ErrUpper = SubjectiveProb + 2 *(sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood))),
+    ErrLower = SubjectiveProb - 2 *(sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)))
     )
 ggplot(ya_error_level, aes(x=ObjectiveProb, y=SubjectiveProb, color=Domain)) +
-  geom_line(size=1) + xlim(0,1) + ylim(0,1) +
+  geom_smooth() +
+  #geom_ribbon(aes(ymin=ErrLower, ymax=ErrUpper), fill='lightgrey',linetype=0) +
+  #geom_line() +
+  coord_cartesian(xlim=c(0,1),ylim=c(0,1)) +
   geom_abline(aes(slope=1,intercept=0),linetype=2) +
-  geom_linerange(aes(ymin=ErrLower, ymax=ErrUpper),size=1) +
   xlab('Objective Probability') + ylab('Estimation') +
   ggtitle('Young Adults\' Error Asymmetry') +
   ggpubr::color_palette(line_color_palette) +
-  ggpubr::labs_pubr(base_size = 12)
+  theme_minimal(base_size = 12)
 ```
 
 
@@ -96,16 +91,17 @@ oa_error_level <- filter(data, AgeGroup == 2)  %>%
   group_by(Domain, ObjectiveProb = TrueProbGood) %>%
   summarize(
     SubjectiveProb = mean(ProbGood, na.rm = TRUE),
-    ErrUpper = SubjectiveProb + sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)),
-    ErrLower = SubjectiveProb - sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood))
+    ErrUpper = SubjectiveProb + 2 *(sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood))),
+    ErrLower = SubjectiveProb - 2 *(sd(ProbGood, na.rm = TRUE) / sqrt(length(ProbGood)))
     )
 ggplot(oa_error_level, aes(x=ObjectiveProb, y=SubjectiveProb, color=Domain)) +
-  geom_line(size=1) + xlim(0,1) + ylim(0,1) +
+  geom_smooth() + coord_cartesian(xlim=c(0,1),ylim=c(0,1)) +
+  #geom_ribbon(aes(ymin=ErrLower, ymax=ErrUpper), fill='lightgrey', linetype=0) +
+  #geom_line() + 
   geom_abline(aes(slope=1,intercept=0),linetype=2) +
-  geom_linerange(aes(ymin=ErrLower, ymax=ErrUpper),size=1) +
   ggtitle('Older Adults\' Error Asymmetry') +
   xlab('Objective Probability') + ylab('Estimation') +
   ggpubr::color_palette(line_color_palette) +
-  ggpubr::labs_pubr(base_size = 12)
+  theme_minimal(base_size = 12)
 ```
 
