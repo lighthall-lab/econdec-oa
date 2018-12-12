@@ -7,3 +7,8 @@ __pycache__
 
 # R console log
 .Rhistory
+
+# Data incidentally saved in /code
+*.csv
+*.xlsx
+*.txt
