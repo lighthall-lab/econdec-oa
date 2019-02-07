@@ -37,7 +37,7 @@ data$StockValue <- factor(data$StockValue)
 ```
 
 
-#### Group & Summarize
+#### Group & Summarize. Using val_estdiff_valid to create mean and confidence interval.
 ```{r}
 grp_level <- data %>%
 	group_by(AgeGroup,StockValue) %>%
@@ -60,6 +60,28 @@ ggplot(grp_level, aes(x = AgeGroup, y = mean, fill=StockValue)) +
 	theme_minimal()
 ```
 
+#### Group & Summarize. Using absolute_error to create mean and confidence interval.
+```{r}
+grp_level <- data %>%
+	group_by(AgeGroup,StockValue) %>%
+	summarize(
+	  mean = mean(absolute_error, na.rm = TRUE),
+	  ci = 2*(sd(absolute_error, na.rm = TRUE) / sqrt(length(absolute_error)))
+	  )
+spread(select(grp_level,StockValue,mean),StockValue,mean)
+```
+
+
+
+```{r}
+# Bar Plot Domain-Magnitude Interaction Between Groups
+ggplot(grp_level, aes(x = AgeGroup, y = mean, fill=StockValue)) + 
+	geom_bar(aes(fill = StockValue), stat='identity', position=position_dodge()) +
+  geom_errorbar(aes(x = AgeGroup, ymin=mean-ci, ymax=mean+ci), position=position_dodge2()) +
+	ggpubr::color_palette(bar_color_palette) + 
+	ggpubr::fill_palette(bar_fill_palette) + 
+	theme_minimal()
+```
 
 
 ```{r}
