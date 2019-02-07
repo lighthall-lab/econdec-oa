@@ -1,3 +1,7 @@
+
+# Junk 
+Thumbs.db
+
 # API-key storage
 config.py
 __pycache__
@@ -5,10 +9,17 @@ __pycache__
 # Python Notebook Checkpoints
 .ipynb_checkpoints/*
 
-# R console log
+# R metadata
 .Rhistory
+.RData
 
 # Data incidentally saved in /code
 *.csv
 *.xlsx
 *.txt
+
+# Figures incidentally saved in /code
+*.png
+*.jpg
+*.bmp
+*.gif
